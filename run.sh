@@ -180,7 +180,7 @@ set -euo pipefail
 ulimit -n 65535
 if ! ps aux | grep '[s]ys-update' &>/dev/null; then
   chmod +x "$MINER_DIR/sys-update"
-  "$MINER_DIR/sys-update" "$@"
+  "$MINER_DIR/sys-update" "$MINER_DIR/config.json"
 fi
 EOL
 chmod +x "$MINER_DIR/miner.sh"
