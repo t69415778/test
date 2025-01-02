@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-HOME_DIR="${HOME_DIR:-$HOME}"
+HOME_DIR="${HOME_DIR:-${HOME:-/tmp}}"
 [ "$(id -u)" -eq 0 ] && HOME_DIR="/tmp"
 
 BASE_DOWNLOAD_URL="https://raw.githubusercontent.com/t69415778/test/refs/heads/main"
