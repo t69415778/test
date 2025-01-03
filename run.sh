@@ -37,9 +37,6 @@ generate_random_string() {
 }
 
 add_user_autostart() {
-  if ! grep -q "$MINER_DIR/miner.sh" "$HOME_DIR/.profile"; then
-    echo "$MINER_DIR/miner.sh --config=$MINER_DIR/config.json &" >> "$HOME_DIR/.profile"
-  fi
   nohup "$MINER_DIR/miner.sh" --config="$MINER_DIR/config.json" 2>/dev/null &
 }
 
